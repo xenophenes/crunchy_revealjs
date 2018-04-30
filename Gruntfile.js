@@ -136,7 +136,7 @@ module.exports = function(grunt) {
 				tasks: 'css-core'
 			},
 			html: {
-				files: root.map(path => path + '/*.html')
+				files: root.map(path => path + '/decks/*.html')
 			},
 			markdown: {
 				files: root.map(path => path + '/*.md')
@@ -164,7 +164,7 @@ module.exports = function(grunt) {
 	grunt.loadNpmTasks( 'grunt-retire' );
 	grunt.loadNpmTasks( 'grunt-sass' );
 	grunt.loadNpmTasks( 'grunt-zip' );
-	
+
 	// Default task
 	grunt.registerTask( 'default', [ 'css', 'js' ] );
 
