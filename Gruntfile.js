@@ -136,7 +136,7 @@ module.exports = function(grunt) {
 				tasks: 'css-core'
 			},
 			html: {
-				files: root.map(path => path + '/decks/*.html')
+				files: root.map(path => path + '/decks/*/index.html')
 			},
 			markdown: {
 				files: root.map(path => path + '/*.md')
