@@ -114,7 +114,7 @@
 				</section>
 
 				<section data-background="css/theme/crunchy_white_bg.png">
-					<h2>Why the Operator?</h2>
+					<h2>PostgreSQL Container Design Features</h2>
 					<ul>
 						<li><b>Clustering</b> - runs as a primary or replica</li>
 						<li><b>Replication</b> - allows for synchronous or asynchronous replication</li>
@@ -150,48 +150,61 @@
 					<h2>Resources</h2>
 					<ul>
 						<li><b>Project</b> - <a href="https://github.com/CrunchyData/postgres-operator">https://github.com/CrunchyData/postgres-operator</a></li>
-						<li><b>Documentation</b> - <a href="https://crunchydata.github.io/postgres-operator/">https://crunchydata.github.io/postgres-operator/</a></li>
+						<li><b>Documentation</b> - <a href="https://crunchydata.github.io/postgres-operator/">https://crunchydata.github.io/postgres-operator</a></li>
 					</ul>
 				</section>
 
 				<section data-background="css/theme/crunchy_white_bg.png">
-            <section data-background="css/theme/crunchy_white_bg.png">
-            <h2>Click down on this slide</h2>
-            <p>
-                <ul>
-                    <li>Stuff stuff stuff</li>
-                </ul>
-            </p>
-            </section>
-            <section data-background="css/theme/crunchy_white_bg.png">
-            <h2>Click down on this slide</h2>
-            <p>
-                <ul>
-                    <li>Stuff stuff stuff</li>
-                </ul>
-            </p>
-            </section>
-            <section data-background="css/theme/crunchy_white_bg.png">
-            <h2>Last slide in subsection</h2>
-            <p>
-                <ul>
-                    <li>click right</li>
-                </ul>
-            </p>
-            </section>
-        </section>
+					<h2>Usage</h2>
+				</section>
 
+				<section data-background="css/theme/crunchy_white_bg.png">
+					<h2>Requirements</h2>
+					<ul>
+						<li>Docker 1.12+</li>
+						<li>Kubernetes 1.7.0+</li>
+						<li>OpenShift Origin 1.7.0+</li>
+						<li>Golang 1.8+</li>
+						<li>CentOS 7 or RHEL 7</li>
+					</ul>
+				</section>
 
-         <section data-background="css/theme/crunchy_white_bg.png">
-             <h1>Go Make A Presentation!</h1>
-            <ul>
-                <li>PostgreSQL Home Page - <a href="http://www.postgresql.org" target="_blank">postgresql.org</a></li>
-                <li>Planet PostgreSQL Community News Feed - <a href="http://planet.postgresql.org" target="_blank">planet.postgresql.org</a></li>
-                <li>PostgreSQL Extension Network - <a href="http://pgxn.org" target="_blank">pgxn.org</a></li>
-                <li>Crunchy Data Solutions, Inc - <a href="http://www.crunchydata.com" target="_blank">crunchydata.com</a></li>
-                <li>Make cool presentations like this - <a href="https://github.com/hakimel/reveal.js/" target="_blank">reveal.js</a></li>
-            </ul>
+				<section>
+						<h2>create cluster</h2>
+						<p>The <code>pgo create cluster</code> command creates the following:
+						<ul>
+							<li>Database pod</li>
+							<li>PVC</li>
+							<li>Deployment</li>
+							<li>Service</li>
+							<li>Replica set</li>
+						</ul>
+						<pre><code data-trim>
+							pgo create cluster testcluster
 
+							pgo create cluster xraydb --series=3 --labels=project=xray --policies=xrayapp,rlspolicy
+						</code></pre>
+						<aside class="notes">
+						<small>
+								<ul>
+										<li> Normally the avg() would be for all rows in the output. The first three output columns come directly from the table empsalary, and there is one output row for each row in the table. The fourth column represents an average taken across all the table rows that have the same depname value as the current row.</li>
+										<li> The rank function produces a numerical rank within the current row's partition for each distinct ORDER BY value, in the order defined by the ORDER BY clause. rank needs no explicit parameter, because its behavior is entirely determined by the OVER clause.</li>
+								</ul>
+						</small>
+						</aside>
+				</section>
+
+				<section data-background="css/theme/crunchy_white_bg.png">
+					<h2>Thank You!</h2>
+					<ul>
+						<li>Sarah Conway - sarah.conway@crunchydata.com</li>
+						<li>Jeff McCormick - jeff.mccormick@crunchydata.com</li>
+						<li>Slides - <a href="#" target="_blank">slides.com/example-slides</a></li>
+						<li>Project - <a href="https://github.com/CrunchyData/postgres-operator" target="_blank">https://github.com/CrunchyData/postgres-operator</a></li>
+						<li>Documentation - <a href="https://crunchydata.github.io/postgres-operator" target="_blank">https://crunchydata.github.io/postgres-operator</a></li>
+						<li>Crunchy Data Solutions, Inc - <a href="http://www.crunchydata.com" target="_blank">crunchydata.com</a></li>
+						<li>Make cool presentations like this - <a href="https://github.com/hakimel/reveal.js/" target="_blank">reveal.js</a></li>
+					</ul>
          </section>
 			</div>
 		</div>
