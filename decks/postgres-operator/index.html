@@ -1,0 +1,221 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>Crunchy Data PostgreSQL Operator</title>
+
+        <meta name="description" content="Crunchy Data PostgreSQL Operator">
+        <meta name="author" content="Sarah Conway">
+
+		<link rel="stylesheet" href="css/reveal.css">
+        <!--        <link rel="stylesheet" href="css/theme/black.css"> -->
+        <link rel="stylesheet" href="css/theme/crunchy.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+
+        <style>
+            .reveal {
+              font-size: 30px;
+             }
+
+            #li30 li { line-height:30px }
+        </style>
+
+	</head>
+	<body>
+
+		<div class="reveal">
+			<div class="slides">
+
+				<section data-background="css/theme/crunchy_white_bg.png">
+					<h1>Crunchy Data <br>PostgreSQL Operator</h1>
+				</section>
+
+				<section data-background="css/theme/crunchy_white_bg.png">
+	        <h2>Crunchy Data Solutions, Inc</h2>
+					<ul>
+						<li>Industry leader in providing enterprise PostgreSQL support and open source solutions</li>
+						<li>Crunchy Certified PostgreSQL
+							<ul>
+								<li>100% Open Source PostgreSQL</li>
+								<li>Emphasis in Data Security and Compliance</li>
+	              <li>Common Criteria EAL 2+ Certified</li>
+							</ul>
+						</li>
+						<li>We're hiring!
+							<ul>
+								<li><a href="https://www.crunchydata.com/" target="_blank">https://www.crunchydata.com/</a></li>
+	              <li>DBAs, Systems Engineers, Container Experts</li>
+							</ul>
+						</li>
+					</ul>
+        </section>
+
+				<section data-background="css/theme/crunchy_white_bg.png">
+					<h2>Outline</h2>
+					<ul>
+						<li>Introduction</li>
+						<li>Operator Basics</li>
+						<li>Deployment</li>
+						<li>Why the Operator?</li>
+						<li>PostgreSQL Container Design Features</li>
+						<li>Building Blocks</li>
+						<li>Operator Usage</li>
+						<li>Roadmap</li>
+					</ul>
+				</section>
+
+				<section data-background="css/theme/crunchy_white_bg.png">
+					<h2>Operator Basics</h2>
+					<ul>
+						<li><b>Open Source</b> - <a href="https://github.com/crunchydata/postgres-operator">https://github.com/crunchydata/postgres-operator</a></li>
+						<li><b>Controller</b> - component run per-namespace on Kubernetes or OpenShift</li>
+						<li><b>Command Line Interface</b> - to control the Operator and define metadata</li>
+						<li><b>Deployment</b> - runs as standard Deployment, watches for changes to CRDs</li>
+						<li><b>Custom Resource Definitions</b> - stores deployment metadata</li>
+						<li><b>REST API</b> - Provides a REST API and a REST client</li>
+						<li><b>Security</b> - Provides RBAC authorization and TLS/Basic Auth security</li>
+					</ul>
+				</section>
+
+				<section data-background="css/theme/crunchy_white_bg.png">
+					<h2>PostgreSQL Deployment</h2>
+					<img src="/images/tmp_warning.png"  height="100" width="200">
+				</section>
+
+				<section data-background="css/theme/crunchy_white_bg.png">
+					<h2>Operator Deployment</h2>
+					<img src="/images/tmp_warning.png"  height="100" width="200">
+				</section>
+
+				<section data-background="css/theme/crunchy_white_bg.png">
+					<h2>Why the Operator?</h2>
+					<ul>
+						<li>Automation</li>
+						<li>Standardization</li>
+						<li>Ease of Use</li>
+						<li>Large Scale Deployments</li>
+						<li>Complex Orchestrations</li>
+						<li>Separation of Tasks</li>
+						<li>Lightweight</li>
+					</ul>
+				</section>
+
+				<section data-background="css/theme/crunchy_white_bg.png">
+					<h2>Why the Operator?</h2>
+					<ul>
+						<li><b>Clustering</b> - runs as a primary or replica</li>
+						<li><b>Replication</b> - allows for synchronous or asynchronous replication</li>
+						<li><b>Predefined objects</b> - initializes example database objects in setup.sql</li>
+						<li><b>Locale support</b> - specify any locale for use</li>
+						<li><b>Secrets support</b> - store database credentials with Kubernetes secrets</li>
+						<li><b>Config override</b> - override pg_hba.conf, postgresql.conf, setup.sql</li>
+						<li><b>Openshift Random UID support</b> - use random UID for <b>postgres</b> user</li>
+						<li><b>Backup/Restore</b> - allows restore using a predefined backup archive</li>
+						<li><b>Up-to-Date PostgreSQL Images</b> -
+							<ul>
+								<li>PostgreSQL Version 9.5.13</li>
+								<li>PostgreSQL Version 9.6.9</li>
+								<li>PostgreSQL Version 10.4</li>
+							</ul>
+						</li>
+					</ul>
+				</section>
+
+				<section data-background="css/theme/crunchy_white_bg.png">
+					<h2>Building Blocks</h2>
+					<ul>
+						<li><b>crunchy-postgres</b> - runs PostgreSQL</li>
+						<li><b>crunchy-backup</b> - performs pg_basebackup on a database container</li>
+						<li><b>crunchy-collect</b> - monitors with postgres_exporter & node_exporter</li>
+						<li><b>crunchy-metrics</b> - deploys Prometheus & Grafana</li>
+						<li><b>crunchy-upgrade</b> - runs pg_upgrade to perform a major upgrade</li>
+						<li><b>crunchy-pgpool</b> - open source load-balancing with pgPool II</li>
+					</ul>
+				</section>
+
+				<section data-background="css/theme/crunchy_white_bg.png">
+					<h2>Summary</h2>
+					<ul>
+						<li>https://github.com/CrunchyData/postgres-operator</li>
+						<li>The operator provides a means of controlling PostgreSQL deployments in a high level abstraction</li>
+						<li>The operator integrates tightly with the Kubernetes API to implement orchestrated PostgreSQL workflows like backup, restore, policy management</li>
+						<li>Future versions of the operator will add more advanced security and management features and support future Kubernetes APIs</li>
+					</ul>
+				</section>
+
+				<section data-background="css/theme/crunchy_white_bg.png">
+            <section data-background="css/theme/crunchy_white_bg.png">
+            <h2>Click down on this slide</h2>
+            <p>
+                <ul>
+                    <li>Stuff stuff stuff</li>
+                </ul>
+            </p>
+            </section>
+            <section data-background="css/theme/crunchy_white_bg.png">
+            <h2>Click down on this slide</h2>
+            <p>
+                <ul>
+                    <li>Stuff stuff stuff</li>
+                </ul>
+            </p>
+            </section>
+            <section data-background="css/theme/crunchy_white_bg.png">
+            <h2>Last slide in subsection</h2>
+            <p>
+                <ul>
+                    <li>click right</li>
+                </ul>
+            </p>
+            </section>
+        </section>
+
+
+         <section data-background="css/theme/crunchy_white_bg.png">
+             <h1>Go Make A Presentation!</h1>
+            <ul>
+                <li>PostgreSQL Home Page - <a href="http://www.postgresql.org" target="_blank">postgresql.org</a></li>
+                <li>Planet PostgreSQL Community News Feed - <a href="http://planet.postgresql.org" target="_blank">planet.postgresql.org</a></li>
+                <li>PostgreSQL Extension Network - <a href="http://pgxn.org" target="_blank">pgxn.org</a></li>
+                <li>Crunchy Data Solutions, Inc - <a href="http://www.crunchydata.com" target="_blank">crunchydata.com</a></li>
+                <li>Make cool presentations like this - <a href="https://github.com/hakimel/reveal.js/" target="_blank">reveal.js</a></li>
+            </ul>
+
+         </section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				],
+                slideNumber: true,
+                history: true,
+                controlsLayout: "edges"
+			});
+		</script>
+	</body>
+</html>
