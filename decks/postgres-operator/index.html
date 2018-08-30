@@ -164,6 +164,11 @@
 							</p><p>
 								When you first initialize the Operator, you’ll notice that there’s the basic CRD’s that are created, but no definitions are there by default. Over time as
 								you create clusters, upgrade them, so on and so forth, you’ll see new definitions added in.
+							</p><p>
+								Finally, TLS and BasicAuth security was added in relatively recently, and starting in release 3.0 of the Oeprator, you can now define Operator roles. The
+								administrator role and read-only role is enabled by default, but are considered to be samples that you can configure to suit security requirements as necessary.
+								Complete documentation can be found in the Configuration segment under Installation on the website in order to learn more about how to manipulate this file
+								and the created roles used for interacting with the Operator.
 							</p>
 					</small>
 					</aside>
@@ -175,13 +180,11 @@
 					<aside class="notes">
 					<small>
 							<p>
-								The Operator is deployed to a namespace on a Kube cluster, it operates on PG clusters created in that namespace.  The Operator Pod includes up to 3 containers
-								including the REST API server, the operator logic, and the web user interface.  The pgo CLI tool runs outside the cluster on your laptop for example where you
-								can access the Operator features.
-							</p><p>
-
-							</p><p>
-
+								The Operator is deployed by default to the "demo" namespace on the Kubernetes cluster. It will manipulate and create all Postgres clusters in the same
+								namespace it was deployed in. By default, the Operator pod includes two containers, the Operator itself as well as the REST API server, but can include
+								up to three if you include the web user interface. That third option is still in beta, but I'll be going over some additional details for it later on in
+								the talk. The command line client for the Operator runs separately from the cluster, such as on your local computer, where you can interact directly with
+								the Operator.
 							</p>
 					</small>
 					</aside>
@@ -366,7 +369,9 @@
 								these are the minimum tested versions for the Operator. This is especially important where it comes to Kubernetes and OpenShift - as of version
 								1.6 I believe they switched from using Third Party Resources to Custom Resource Definitions to manage clusters, and the Operator is completely
 								built on manipulating those CRDs as of this time. If necessary, earlier versions of the operator such as version 1.5 can be found in the repo
-								under the relevant tag and those are built using TPRs, it just won't have the latest and greatest Operator features.
+								under the relevant tag and those are built using TPRs, it just won't have the latest and greatest Operator features. As followup information
+								related to that note, we're looking at versioning our docs for the Operator and the Container Suite so that it becomes much easier to deploy
+								earlier versions of the software if necessary and know how it works and how to interact with it.
 							</p>
 					</small>
 					</aside>
@@ -416,7 +421,9 @@
 									You can set an initial password for use by the default created database users, as well as append a metrics collection container to the
 									cluster with the metrics flag. This is the crunchy-collect container, which includes the postgres_exporter and node_exporter open source
 									packages for scraping your Postgres container and grabbing database and operating system level metrics to deliver to whatever graphing
-									or aggregation agent you prefer.
+									or aggregation agent you prefer. As of the latest release of the Container Suite, we now include native support for an open source
+									Crunchy project called pgmonitor, which includes a customized Grafana dashboard and default statistics to show you the connection counts,
+									database size, replication lag, transaction wraparound, bloat levels, and system metrics.
 								</p><p>
 									Custom config allows you to override the default pg_hba.conf and postgresql.conf by using the flag along with the name of a configMap
 									that holds your customized postgres configuration files used to override the defaults. You can also specify the cluster name to use when
@@ -431,9 +438,18 @@
 									Then you have pgpool and pgpool secret, which, respectively, allow you to append the crunchy-pgpool load balancing container and optionally
 									separate pgpool secrets different from the default configuration.
 								</p><p>
+									Again added in the last two releases or so, the crunchy-pgpool, pgbadger, and pgBackRest containers have been added from the Container Suite
+									to work directly with the Operator. pgPool provides load balancing through a smart Postgres-aware proxy connected to a Postgres cluster, both
+									primary and replica, so that applicatoins only have to work with a single database connection. The pgBadger utility is provided as an additional
+									monitoring capability, as it generates a Postgres log analysis report using a small HTTP server running on the container. And then you have
+									the pgBackRest container, which executes pgBackRest against the cluster while allowing FULL and DELTA restore capability and is fully configurable
+									through the pgbackrest.conf file mounted through a ConfigMap. The pgBackRest utility was added in the latest release, 3.2, and is still considered
+									to be in alpha; it's essentially meant to give users a preview of what is to come in future releases.
+								</p><p>
 									The ability is present to do a manual failover of the postgres clusters, but there's also an autofail flag that will let you enable automatic
-									failover for the cluster. Additionally, you can enable archive logging to be enabled for the database cluster with the archive flag.
-									[[[At all times, PostgreSQL maintains a write ahead log (WAL) in the pg_xlog/ subdirectory of the cluster's data directory. The log records every change made to the database's data files. This log exists primarily for crash-safety purposes: if the system crashes, the database can be restored to consistency by "replaying" the log entries made since the last checkpoint. However, the existence of the log makes it possible to use a third strategy for backing up databases: we can combine a file-system-level backup with backup of the WAL files. If recovery is needed, we restore the file system backup and then replay from the backed-up WAL files to bring the system to a current state. ]]]
+									failover for the cluster. Additionally, you can enable archive logging to be enabled for the database cluster with the archive flag. This
+									allows for recovery of the cluster if necessary by restoring the file system backup and replaying from the archived WAL files in order to
+									bring the system to a current state.
 								</p><p>
 									The two storage config flags allow you to respectively define the name of a storage configuration variable that is defined in the pgo.yaml
 									file to use for either the primary replica storage or the replica upon cluster creation. As a reminder, we'll be reviewing briefly how to
@@ -449,7 +465,7 @@
 				<section>
 						<h2>show cluster</h2>
 						<pre><code data-trim>
-							pgo show (cluster | upgrade | config | backup | pvc | policy) (NAME | all) [flags]
+							pgo show (cluster | upgrade | config | backup | pvc | policy | user) (NAME | all) [flags]
 							[-o, --output]
 							[-s, --selector]
 							[-v, --version]
@@ -462,7 +478,8 @@
 									It will also show policies or labels applied to the cluster, what Postgres version is being used, and other management information specific to the
 									Operator. It'll also show the status of the pod, whether it's running and ready, You have the option to either show a specific cluster, or you can
 									specify "all" to view all clusters. When you query for information using the selector or version flags, you'll want to specify "all" to filter
-									appropriately. You can also apply it for other objects, such as a backup, the contents of a pvc, or a policy.
+									appropriately. You can also apply it for other objects, such as a backup, the contents of a pvc, or a policy. I'll review the content covered by
+									show user later on.
 								</p><p>
 									This output that it generates can be translated into JSON or YAML output, and you can query based on labels that we defined at cluster creation or
 									later on applied to clusters. Since the credentials by default are managed with Kubernetes Secrets, you can view the created account information
@@ -555,9 +572,11 @@
 						<aside class="notes">
 						<small>
 							<p>
-
+								After creating the policy, you can choose to apply it to either an individual cluster or against a selection of all clusters that match some
+								specified criteria. This can be especially useful if you had a hundred or so databases that needed to be updated with a new security policy, as
+								you could run pgo apply against the entire suite with one command.
 							</p><p>
-
+								You can also apply policies with a --dry-run flag applied to test which clusters the policy would be applied to without actually executing the SQL.
 							</p>
 						</small>
 						</aside>
@@ -577,27 +596,20 @@
 						</code></pre>
 						<aside class="notes">
 						<small>
-								<ul>
-										<li></li>
-								</ul>
-						</small>
-						</aside>
-				</section>
-
-				<section>
-						<h2>create user</h2>
-						<pre><code data-trim>
-							pgo create user NAME [flags]
-							[-b, --db]
-							[-m, --managed]
-							[-s, --selector]
-							[-v, --valid-days]
-						</code></pre>
-						<aside class="notes">
-						<small>
-								<ul>
-										<li></li>
-								</ul>
+								<p>
+									User management has been refined within the last few releases of the Operator in order to be more flexible with what it's capable of. You can now
+									use pgo create user and pgo delete user as commands to add or remove users, and pgo user is the general management tool for all other user management
+									based queries. For example, you can regenerate the password for a user using Kubernetes Secrets, grant a user access to a database, show the
+									passwords that will expire in X number of days, create a user with Kubernetes Secrets that can be managed by the Operator, update expired passwords,
+									and set passwords for new users to expire in a certan number of days. By default, passwords will expire every 30 days.
+								</p><p>
+									The Managed flag will be especially worthwhile to note as users added without this flag enabled will not be able to be manipulated by the operator.
+									For example, if you create a manged user, you will now be able to test connections to the database with the user using pgo test, can view the generated
+									passwords using pgo show user, and so on.
+								</p><p>
+									There’s many more combinations of these flags that you can do to orchestrate your users exactly how you want, and more features are being added in every
+									release, so definitely check out the documentation and experiment with the different user creation methods.
+								</p>
 						</small>
 						</aside>
 				</section>
@@ -611,11 +623,9 @@
 						<aside class="notes">
 						<small>
 								<p>
-									In previous versions of the Operator, there used to be a --show-secrets flag that was appended to the
-									show cluster command. This has now been replaced with show user command run against the cluster in question
-									or selection of clusters. The output of this command will show all associated user accounts created and
-									managed by the Operator for the cluster in question along with their passwords generated through Kubernetes
-									Secrets.
+									In previous versions of the Operator, there used to be a --show-secrets flag that was appended to the show cluster command. This has now been replaced with
+									the show user command run against the cluster in question or selection of clusters. The output of this command will show all associated user accounts created
+									and managed by the Operator for the cluster in question along with their passwords generated through Kubernetes Secrets.
 								</p>
 						</small>
 						</aside>
@@ -632,9 +642,17 @@
 						</code></pre>
 						<aside class="notes">
 						<small>
-								<ul>
-										<li></li>
-								</ul>
+								<p>
+									Labels can be applied to clusters and nested according to their type, with any string input being valid. As of recent releases
+									of the Operator, you can now additionally delete labels that have been applied, as well as view a dry run of the application to
+									make sure only the correct selection of clusters are being labelled with your new label.
+								</p><p>
+									There aren't specific label names you have to adhere to; for example, say you have a lot of different projects and they're all
+									nested under the "project" label. You have a new cluster to add that holds all of your Vogon Poetry collection. So you'd apply a
+									label of label=project=vogonpoetry. Later, you can query for all clusters residing under "project", and you'll see that as a new
+									addition. Essentially, label management gives users another way to query the clusters using their own metadata labels applied to
+									pgcluster objects.
+								</p>
 						</small>
 						</aside>
 				</section>
@@ -649,9 +667,12 @@
 						</code></pre>
 						<aside class="notes">
 						<small>
-								<ul>
-										<li></li>
-								</ul>
+								<p>
+									pgo load works similarly to the policy commands; essentially, this lets you load a CSV file into the database. The loading is based
+									on a load definition found in the sample-load-config.yaml file under the examples directory. It's documented how to run the example,
+									but essentially in that file you have the data to be loaded. When the pgo load command is executed, Jobs are created to perform the
+									loading for each cluster that matches the selector filter.
+								</p>
 						</small>
 						</aside>
 				</section>
@@ -665,9 +686,12 @@
 						</code></pre>
 						<aside class="notes">
 						<small>
-								<ul>
-										<li>The reload command will perform a pg_ctl reload on the specified PostgreSQL cluster.</li>
-								</ul>
+								<p>
+									The reload command will perform a pg_ctl reload on the specified PostgreSQL cluster. To be more specific, running pg_ctl reload
+									will simply send the postgres server process a SIGHUP signal, causing it to reread its configuration files such as postgresql.conf,
+									pg_hba.conf, and other similar files. This allows you to change configuration-file options that do not require a full server restart
+									to take effect.
+								</p>
 						</small>
 						</aside>
 				</section>
@@ -682,9 +706,18 @@
 						</code></pre>
 						<aside class="notes">
 						<small>
-								<ul>
-										<li></li>
-								</ul>
+								<p>
+									Starting with Release 2.6, there is a manual failover command which can be used to promote a replica to a primary role in a PostgreSQL
+									cluster. This command will perform all the heavy lifting for you for executing a manual failover, by first choosing a target replica to
+									become the new primary, deleting the current primary deployment to avoid user requests from being executed to multiple primary databases,
+									promoting the targeted replica using pg_ctl promote causing Postgres for that replica to go into read-write mode, and finally, it will
+									re-label the targeted replica to use the primary labels that will match the primary service selector. This will allow new requests made
+									to the primary to be routed to the newly elected primary.
+								</p><p>
+									Because it involves the deletion of the primary deployment, you will be prompted for a command line confirmation that yes, you really
+									want to delete the deployment. You can avoid it with the no-prompt flag. The query flag will give you the full list of failover candidates
+									so you can specify a specific target.
+								</p>
 						</small>
 						</aside>
 				</section>
@@ -707,9 +740,24 @@
 						</code></pre>
 						<aside class="notes">
 						<small>
-								<ul>
-										<li></li>
-								</ul>
+								<p>
+									Postgres is considered a single-primary database by design, so by default, you'll have the primary Deployment set to a replica count of
+									1 and it will not be able to scale beyond that. However, you do have the ability to create any number of replicas that can connect to
+									the primary, creating a streaming replication Postgres cluster in which all the replicas are read-only and the primary is read-write.
+								</p><p>
+									The pgo scale command will let you scale up the number of replicas in the replica deployment. The service created for this deployment will
+									also perform round-robin load balancing to the replicas. The deployment is created by default for the replicas with the actual number of
+									replicas upon creation being set to 0. This number can be changed in the pgo configuration file to automatically provision say, 3 replicas,
+									every time you create a new database cluster. Otherwise, you can manually scale up the cluster using the command. Right now, these replicas
+									are asynchronous but we will later be adding in support for synchronous replicas.
+								</p><p>
+									Additionally, you may want to note that previous to version 3.2 of the Operator, it was not possible to scale down the number of replicas,
+									but that feature was just added in order to let you selectively delete certain replicas if needed. You can also now specify a specific
+									version of Postgres for the created replicas if you need it to be different from the default set in your pgo configuration file.
+								</p><p>
+									You can double check that everything is working correctly from a Postgres standpoint by connecting to the database using psql and checking the
+									pg_stat_replication table if you're running through these examples and smoke testing.
+								</p>
 						</small>
 						</aside>
 				</section>
@@ -723,9 +771,20 @@
 						</code></pre>
 						<aside class="notes">
 						<small>
-								<ul>
-										<li></li>
-								</ul>
+								<p>
+									You have the option of upgrading existing clusters between minor or major versions of Postgres, in addition to upgrading the
+									container version itself being used. It uses the crunchy-upgrade container from the Container Suite in order to execute the
+									pg_ugprade utility against the cluster.
+								</p><p>
+									It will request confirmation for the command when executed as the procedure for upgrading an existing cluster is for the operator
+									to delete the existing containers of the running database and recreate them using the specified image tag or the new default version
+									defined in the pgo configuration file. The database data files themselves will not be touched during the upgrade, as once the
+									upgrade is complete, the operator will create a new database container with the newly ugpraded PVC which contains the upgraded
+									data files.
+								</p><p>
+									You can keep watch on the status of the upgrade by viewing the status of the pgupgrade custom resource definition that's created
+									by default. Depending on how large your database is, this operation could take a while.
+								</p>
 						</small>
 						</aside>
 				</section>
@@ -738,9 +797,11 @@
 						</code></pre>
 						<aside class="notes">
 						<small>
-								<ul>
-										<li></li>
-								</ul>
+								<p>
+									The pgo df command will let you see the disk capacity of a cluster’s PVC versus that of the PostgreSQL data that has been written to disk. If
+									the capacity is less than 50%, then the output is printed in red in order to alert the user. It'll print out the name of the cluster, the status
+									of the cluster, the size of the Postgres data directory, the total capacity of the PVC, and the total percentage used of the PVC.
+								</p>
 						</small>
 						</aside>
 				</section>
@@ -847,9 +908,69 @@
 						</code></pre>
 						<aside class="notes">
 						<small>
-								<ul>
-										<li></li>
-								</ul>
+								<p>
+									A large part of working with the Operator is having the ability to configure everything that's done by default. This can be a
+									huge timesaver if you have a consistent method of how you want your clusters to be deployed, and also provides the basis for
+									other command flags that we've covered previously such as the ability to select pre-defined resource or storage configuration
+									names.
+								</p><p>
+									This file is located under the conf slash apiserver directory by default. The first segment, Cluster, deals with the default
+									creation criteria for all new clusters, as you might expect, including some default parameters for new users. If you know for
+									a fact that all new clusters should be enabled with the Metrics suite and have 3 replicas, this is where you'd change that
+									information.
+								</p><p>
+									A brief explanation of strategies - so, each strategy supplies its set of templates used by the operator to create new pods,
+									services, and so on. When the operator is deployed, part of the deployment process is to copy the required strategy templates
+									into a ConfigMap that gets mounted within the operator pod. This default strategy template includes everything we saw earlier
+									- a deployment running a Postgres *master* container with replica count of 0, a service mapped to the master postgres database,
+									a replicaset with a service mapped for that, and a pvc for the master if not specified in either the configuration file or as
+									a flag passed into the command.
+								</p><p>
+									As of release 2.5, you can now define n-number of Storage configurations within the pgo.yaml file. Those Storage configurations
+									follow the conventions of having lowercase, unique names. They can then be referenced in the configuration values for BackupStorage,
+									ReplicaStorage, and PrimaryStorage. While those are used by default for the relevant deployment types, there are command flags
+									as I mentioned earlier that will let you specifically target a defined Storage type for a particular cluster, for example if you
+									wanted to target a disaster recovery storage type for particular backups to offload them to a remote server, this is where you'd
+									define that.
+								</p><p>
+									You can set the storage AccessMode values to one of three values:
+
+									1) ReadWriteMany - mounts the volume as read-write by many nodes
+									2) ReadWriteOnce - mounts the PVC as read-write by a single node
+									3) ReadOnlyMany - mounts the PVC as read-only by many nodes
+								</p><p>
+									These Storage configurations are validated and are only read when the pgo-apiserver starts. If a non-valid configuration is found, the
+									apiserver will abort. You then have the size for each PVC in addition to the StorageType. There are four possible values for a storage
+									type:
+								</p><p>
+									1) dynamic - This setting allows for dynamic provisioning of storage using a StorageClass.
+									2) existing - Existing allows you to use a PVC that already exists. For example, if you have a NFS volume mounted to a PVC, all PostgreSQL
+									clusters can write to that NFS volume mount via a common PVC. When set, the Name setting is used for the PVC.
+									3) create - This setting allows for the creation of a new PVC for each PostgreSQL cluster using a naming convention of clustername-pvc*.
+									When set, the size and AccessMode settings are used in constructing the new PVC.
+									4) emptydir - If a StorageType value is not defined, emptydir is used by default. This is a volume type that’s created when a pod is assigned
+									to a node and exists as long as that pod remains running on that node; it is deleted as soon as the pod is manually deleted or removed from
+									the node.
+								</p><p>
+									You have two optional values you can specify for the storage configuration section, FSGROUP and Supplemental Groups. FSGROUP can be set in
+									order to cause  security context and fsgroup attributes to be added to pod and deployment definitions, and the supplemental groups setting
+									will cause a securitycontext to be added.
+								</p><p>
+									There are some values not defined by default in the file - for example, if you wanted to automatically apply any policy you create,
+									you can define in the configuration file a POLICIES value under CLUSTER and set it to the names of the policy values that you want
+									applied by default. This SQL policy file would then be applied every time you create a cluster, as the Postgres superuser.
+								</p><p>
+									Finally, you have the pgo specific settings. You won't need to modify these too much, but it's worth noting the following variables.
+									First, if AutoFailover is enabled on your cluster, you'll want to note the AutofailSleepSeconds parameter. It defines the number of seconds
+									to wait for the primary database to return to a Ready status within the timer period; if it fails, a failover is triggered for the cluster by
+									the auto failover logic.
+								</p><p>
+									Audit is a boolean variable; if set to true will cause each apiserver call to be logged with an audit marking. This gives more in depth logging
+									on each request you make to the apiserver. You then have the default templates to be used for showing the contents of a PVC and loading CSV data,
+									and finally, you hae the CoImagePrefix and CoImageTag settings which define the container version to use for the Operator itself. You’ll just want
+									to note that the number changes with each release. So for example, when upgrading the Operator next time a release comes out, you’ll want to change
+									the image tag to centos7-3.3.0 when redeploying the Operator.
+								</p>
 						</small>
 						</aside>
 				</section>
@@ -926,7 +1047,7 @@
 							<p>
 								As I mentioned before, this is definitely still a beta design. It will be undergoing a complete redesign in the next few months in addition
 								to being brought up-to-date with all features of the Operator. Eventually, it will most likely be combined with the Operator package by
-								default and perhaps just enabled as a separate feature. 
+								default and perhaps just enabled as a separate feature.
 							</p>
 					</small>
 					</aside>
