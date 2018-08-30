@@ -1552,3 +1552,14 @@ body {
 
 .zoomed .reveal .roll span:after {
   visibility: hidden; }
+
+/*********************************************
+ * CUSTOM
+ *********************************************/
+section {
+  text-align: left;
+}
+
+.reveal pre {
+  width: 100%;
+}
